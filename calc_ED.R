@@ -4,7 +4,6 @@ require(foreign)
 
 # data table
 d = read.dbf('wtshds_all.dbf')
-
 f_id = 'GLAHFID2'  # unique field
 
 # column names for development stressors
@@ -14,7 +13,7 @@ dev_stressors = c("rlua", "popn", "pcntdv")
 ag_stressors = c("pcntag")
 
 # road correction related
-use_road_correction = T
+use_road_correction = F
 f_area = "Shape_Area"  # confirm this field is up to date
 f_ag = "pcntag"
 f_rlua = "rlua"
@@ -28,6 +27,10 @@ roadwidth = sum(c(
 roadwidth = 15  # overwride
 
 # END: config things
+
+d = read.dbf('~/n/proj/WinStress/export/sumrel5x5971/sumrel5x5971.dbf')
+f_id = 'UNIQ_ID3'
+dev_stressors = c("rlua", "popn", "pcntdev")
 
 stressors = c(dev_stressors, ag_stressors)
 
@@ -78,10 +81,16 @@ d$ag_maxrel = apply(d[, ag_stressors||'_nrm', drop=F], 1, max)
 
 # calc. Euc. dist.
 d$agdev = sqrt(d$ag_maxrel^2 + d$dev_maxrel^2)
+d$agdev = normalize(d$agdev)
 
 # for verification,
 stress = order(d$dev_maxrel + d$ag_maxrel, decreasing=T)
-d$area_nrm = normalize(d[,f_area])
+if (f_area %in% names(d)) {
+    d$area_nrm = normalize(d[,f_area])
+} else {
+    d$area_nrm = -9999
+}
+stress = order(d[,f_id])
 View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
     'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
 
