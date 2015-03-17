@@ -1,5 +1,41 @@
 require(foreign)
 
+# START: config. things
+
+# data table
+d = read.dbf('wtshds_all.dbf')
+
+f_id = 'GLAHFID2'  # unique field
+
+# column names for development stressors
+dev_stressors = c("rlua", "popn", "pcntdv")
+
+# column names for ag. stressors
+ag_stressors = c("pcntag")
+
+# road correction related
+use_road_correction = T
+f_area = "Shape_Area"  # confirm this field is up to date
+f_ag = "pcntag"
+f_rlua = "rlua"
+roadwidth = sum(c(
+    1.0,  # gravel by the shoulder
+    1.5,  # the shoulder
+    3.4   # width of a lane, arbitrarily from
+          # http://en.wikipedia.org/wiki/Lane#Lane_width
+)) * 2    # for a two land road
+
+roadwidth = 15  # overwride
+
+# END: config things
+
+stressors = c(dev_stressors, ag_stressors)
+
+# make a||b shorthand for paste(a,b,sep='')
+"||" <- function(...) UseMethod("||")
+"||.default" <- .Primitive("||")
+"||.character" <- function(...) paste(...,sep="")
+
 normalize = function(x, minx=NA, maxx=NA) {
     # scale vector x into a 0-1 range
     if (is.na(minx)) {
@@ -11,37 +47,42 @@ normalize = function(x, minx=NA, maxx=NA) {
     return((x-minx) / (maxx-minx))
 }
 
-d = read.dbf('wtshds_all.dbf')
-
-d$popn[d$popn==-9999] = NA
-
-# ArcMap fails to distinquish between Null and zero in DBFs, 
+# ArcMap fails to distinguish between Null and zero in DBFs, 
 # QGis, R, LibreOffice, Excel, and Access all correctly make
 # the distinction.  For this particular application, Null can
 # be treated as zero
-
-stressors = c("rlua", "popn", "pcntag", "pcntdv")
 for (stress in stressors) {
+    d[stress][d[stress] == -9999] = NA
     d[stress][is.na(d[stress])] = 0
-    d[paste(stress, '_nrm', sep='')] = normalize(d[stress])
+}
+
+if (use_road_correction) {
+    # correction for roads in small ~100% ag. watersheds
+    roadlen = d[,f_rlua] * d[,f_area]
+    roadarea = roadlen * roadwidth
+    overag = d[,f_ag] / 100. * d[,f_area] > d[,f_area] - roadarea
+    d[,f_ag||'_raw'] = d[,f_ag]
+    d[,f_ag][overag] = ((d[,f_area] - roadarea) / d[,f_area] * 100.)[overag]
+}
+
+# normalize all stressors
+for (stress in stressors) {
+    d[stress||'_nrm'] = normalize(d[stress])
 }
 
 summary(d)
 
-d$dev_maxrel = apply(
-    d[, c('rlua_nrm', 'popn_nrm', 'pcntdv_nrm')],
-    1,
-    max
-)
+# calc. maxRel, drop=F for single column cases
+d$dev_maxrel = apply(d[, dev_stressors||'_nrm', drop=F], 1, max)
+d$ag_maxrel = apply(d[, ag_stressors||'_nrm', drop=F], 1, max)
 
-d$agdev = sqrt(d$pcntag_nrm^2 + d$dev_maxrel^2)
+# calc. Euc. dist.
+d$agdev = sqrt(d$ag_maxrel^2 + d$dev_maxrel^2)
 
-stress = order(d$dev_maxrel + d$pcntag_nrm, decreasing=T)
-
-d$area_nrm = normalize(d$Shape_Area)
-
-View(round(d[stress, c('GLAHFID2', 'area_nrm', 'rlua_nrm', 'popn_nrm',
-            'pcntdv_nrm', 'pcntag_nrm', 'dev_maxrel', 'agdev')], 3))
-
+# for verification,
+stress = order(d$dev_maxrel + d$ag_maxrel, decreasing=T)
+d$area_nrm = normalize(d[,f_area])
+View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
+    'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
 
       
