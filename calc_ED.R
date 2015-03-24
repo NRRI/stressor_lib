@@ -13,7 +13,7 @@ dev_stressors = c("rlua", "popn", "pcntdv")
 ag_stressors = c("pcntag")
 
 # road correction related
-use_road_correction = F
+use_road_correction = T
 f_area = "Shape_Area"  # confirm this field is up to date
 f_ag = "pcntag"
 f_rlua = "rlua"
@@ -28,9 +28,11 @@ roadwidth = 15  # overwride
 
 # END: config things
 
-d = read.dbf('~/n/proj/WinStress/export/sumrel5x5971/sumrel5x5971.dbf')
-f_id = 'UNIQ_ID3'
-dev_stressors = c("rlua", "popn", "pcntdev")
+if (F) {  # "GLEI-2 5971 ED/AgDev" calc.
+    d = read.dbf('~/n/proj/WinStress/export/sumrel5x5971/sumrel5x5971.dbf')
+    f_id = 'UNIQ_ID3'
+    dev_stressors = c("rlua", "popn", "pcntdev")
+}
 
 stressors = c(dev_stressors, ag_stressors)
 
@@ -90,7 +92,7 @@ if (f_area %in% names(d)) {
 } else {
     d$area_nrm = -9999
 }
-stress = order(d[,f_id])
+# stress = order(d[,f_id])
 View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
     'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
 
