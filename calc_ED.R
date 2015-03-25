@@ -8,9 +8,15 @@ f_id = 'GLAHFID2'  # unique field
 
 # column names for development stressors
 dev_stressors = c("rlua", "popn", "pcntdv")
+dev_stressors_trans = c("identity", "identity", "identity")
+# dev_stressors_trans = c("logtrans", "logtrans", "logtrans")
+# dev_stressors_trans = c("arcsin", "arcsin", "arcsin")
 
 # column names for ag. stressors
 ag_stressors = c("pcntag")
+ag_stressors_trans = c("identity")
+# ag_stressors_trans = c("logtrans")
+# ag_stressors_trans = c("arcsin")
 
 # road correction related
 use_road_correction = T
@@ -35,6 +41,7 @@ if (F) {  # "GLEI-2 5971 ED/AgDev" calc.
 }
 
 stressors = c(dev_stressors, ag_stressors)
+stressors_trans = c(dev_stressors_trans, ag_stressors_trans)
 
 # make a||b shorthand for paste(a,b,sep='')
 "||" <- function(...) UseMethod("||")
@@ -51,6 +58,9 @@ normalize = function(x, minx=NA, maxx=NA) {
     }
     return((x-minx) / (maxx-minx))
 }
+identity = function (x) x
+logtrans = function (x) log10(x + if (min(x)==0) min(x[x!=0]) else 0)
+arcsin = function (x) asin(sqrt(normalize(x)))
 
 # ArcMap fails to distinguish between Null and zero in DBFs, 
 # QGis, R, LibreOffice, Excel, and Access all correctly make
@@ -72,7 +82,8 @@ if (use_road_correction) {
 
 # normalize all stressors
 for (stress in stressors) {
-    d[stress||'_nrm'] = normalize(d[stress])
+    trans = environment()[[stressors_trans[match(stress, stressors)]]]
+    d[stress||'_nrm'] = normalize(trans(d[stress]))
 }
 
 summary(d)
@@ -85,6 +96,17 @@ d$ag_maxrel = apply(d[, ag_stressors||'_nrm', drop=F], 1, max)
 d$agdev = sqrt(d$ag_maxrel^2 + d$dev_maxrel^2)
 d$agdev = normalize(d$agdev)
 
+plots = c(stressors||'_nrm', c('ag_maxrel', 'dev_maxrel', 'agdev'))
+rows = as.integer(sqrt(length(plots))+0.5)
+cols = rows + if (rows^2 < length(plots)) 1 else 0
+png(filename=ag_stressors_trans[1]||'.png', width=800, height=800)
+par(mfrow=c(rows, cols), cex=1.)
+for (val in plots) {
+    hist(d[,val], main='', xlab=val)
+}
+mtext(ag_stressors_trans[1], outer=T, side=3, line=-2)
+dev.off()
+
 # for verification,
 stress = order(d$dev_maxrel + d$ag_maxrel, decreasing=T)
 if (f_area %in% names(d)) {
@@ -93,7 +115,7 @@ if (f_area %in% names(d)) {
     d$area_nrm = -9999
 }
 # stress = order(d[,f_id])
-View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
-    'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
+# View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
+#     'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
 
       
