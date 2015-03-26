@@ -7,5 +7,5 @@ http://www.nrri.umn.edu/ in a reproducible way.
 
 Sub-folders:
     
-    - [euc_distance](euc_distance)/ - code for "Euclidean distance" landscape
+    - [euc_distance/](./euc_distance/) - code for "Euclidean distance" landscape
       stress integration metric.
