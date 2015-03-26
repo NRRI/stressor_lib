@@ -3,7 +3,7 @@ require(foreign)
 # START: config. things
 
 # data table
-d = read.dbf('wtshds_all.dbf')
+# d = read.dbf('wtshds_all.dbf')
 f_id = 'GLAHFID2'  # unique field
 
 # column names for development stressors
@@ -23,14 +23,8 @@ use_road_correction = T
 f_area = "Shape_Area"  # confirm this field is up to date
 f_ag = "pcntag"
 f_rlua = "rlua"
-roadwidth = sum(c(
-    1.0,  # gravel by the shoulder
-    1.5,  # the shoulder
-    3.4   # width of a lane, arbitrarily from
-          # http://en.wikipedia.org/wiki/Lane#Lane_width
-)) * 2    # for a two land road
-
-roadwidth = 15  # overwride
+roadwidth = 15  # meters, incl. shoulder etc.,
+                # typical of rural roads missed by land cover
 
 # END: config things
 
@@ -39,6 +33,8 @@ if (F) {  # "GLEI-2 5971 ED/AgDev" calc.
     f_id = 'UNIQ_ID3'
     dev_stressors = c("rlua", "popn", "pcntdev")
 }
+
+source("example_config.R")
 
 stressors = c(dev_stressors, ag_stressors)
 stressors_trans = c(dev_stressors_trans, ag_stressors_trans)
@@ -67,6 +63,7 @@ arcsin = function (x) asin(sqrt(normalize(x)))
 # the distinction.  For this particular application, Null can
 # be treated as zero
 for (stress in stressors) {
+    show(stress)
     d[stress][d[stress] == -9999] = NA
     d[stress][is.na(d[stress])] = 0
 }
