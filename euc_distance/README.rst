@@ -12,7 +12,7 @@ using GIS techniques such as "Zonal Statistics".
 Prior to following the steps, a correction may be applied for
 small watersheds classed as 100% agricultural land cover which also
 include roads.  The need and procedure for this correction
-is explrst ained below, it is not part of the core Euclidean distance
+is explained below, it is not part of the core Euclidean distance
 metric.
 
 Exampled data (in ``example_data.csv``)::
@@ -40,7 +40,7 @@ Normalized (rescaled zero to one) values::
    "agricultural".
     
 #. Within each category, the `MaxRel` value is determined, this is
-   the maxium value of the rescaled stressors for that watershed.
+   the maximum value of the rescaled stressors for that watershed.
    In the example data there's only one stressor in the agricultural
    category, so ``ag_mxr`` is the same as ``pcntag_nrm``, the
    rescaled percent agricultural land cover stressor.  For the
@@ -59,6 +59,9 @@ Road correction
 
 Roads should be classified as "developed" land cover.  100% agricultural
 land cover should exclude any developed land cover, including roads.
-
-
-See comments in ``calc_ED.R``.
+For very small watersheds with inaccurate land cover and a road, you may
+have a very high ``ag_mxr`` and ``dev_mxr``, which distorts the metric.
+The correction in ``calc_ED.R`` is to limit the maximum percent agricultural
+land cover based on the length of roads in the watershed and the watershed's
+area.  See ``example_config.R`` for steps to enable this correction, and
+``calc_ED.R`` for implementation.
