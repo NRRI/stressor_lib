@@ -68,38 +68,20 @@ d$ag_maxrel = apply(d[, ag_stressors||'_nrm', drop=F], 1, max)
 d$agdev = sqrt(d$ag_maxrel^2 + d$dev_maxrel^2)
 d$agdev = normalize(d$agdev)
 
-# just for reference, show impact of different transformations on
-# inputs
-for (trans_name in c('identity', 'logtrans', 'arcsin')) {
-    trans = environment()[[trans_name]]
-    plots = c(stressors, c('ag_maxrel', 'dev_maxrel', 'agdev'))
-    rows = as.integer(sqrt(length(plots))+0.5)
-    cols = rows + if (rows^2 < length(plots)) 1 else 0
-    png(filename=trans_name||'.png', width=800, height=800)
-    par(mfrow=c(rows, cols), cex=1.)
-    for (val in plots) {
-        x = d[,val]
-        if (val %in% stressors) {
-            x = trans(x)
-        }
-        hist(x, main='', xlab=val)
-    }
-    mtext(trans_name, outer=T, side=3, line=-2)
-    dev.off()
-}
-
 out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.csv'
 write.csv(d, out_filename, row.names=F)
 
-# for verification,
-stress = order(d$dev_maxrel + d$ag_maxrel, decreasing=T)
-if (f_area %in% names(d)) {
-    d$area_nrm = normalize(d[,f_area])
-} else {
-    d$area_nrm = -9999
+# for verification
+if (F) {
+    stress = order(d$dev_maxrel + d$ag_maxrel, decreasing=T)
+    if (f_area %in% names(d)) {
+        d$area_nrm = normalize(d[,f_area])
+    } else {
+        d$area_nrm = -9999
+    }
+    stress = order(d[,f_id])
+    View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
+        'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
 }
-# stress = order(d[,f_id])
-# View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
-#     'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
 
       
