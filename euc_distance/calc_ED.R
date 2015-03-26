@@ -1,41 +1,13 @@
 require(foreign)
 
-# START: config. things
+# usage: R -f calc_ED.R --args <config. file>
 
-# data table
-# d = read.dbf('wtshds_all.dbf')
-f_id = 'GLAHFID2'  # unique field
+# run the config file, specified on the command line
+opts = commandArgs(trailingOnly=T)
+config_filename = opts[1]
+source(config_filename)
 
-# column names for development stressors
-dev_stressors = c("rlua", "popn", "pcntdv")
-dev_stressors_trans = c("identity", "identity", "identity")
-# dev_stressors_trans = c("logtrans", "logtrans", "logtrans")
-# dev_stressors_trans = c("arcsin", "arcsin", "arcsin")
-
-# column names for ag. stressors
-ag_stressors = c("pcntag")
-ag_stressors_trans = c("identity")
-# ag_stressors_trans = c("logtrans")
-# ag_stressors_trans = c("arcsin")
-
-# road correction related
-use_road_correction = T
-f_area = "Shape_Area"  # confirm this field is up to date
-f_ag = "pcntag"
-f_rlua = "rlua"
-roadwidth = 15  # meters, incl. shoulder etc.,
-                # typical of rural roads missed by land cover
-
-# END: config things
-
-if (F) {  # "GLEI-2 5971 ED/AgDev" calc.
-    d = read.dbf('~/n/proj/WinStress/export/sumrel5x5971/sumrel5x5971.dbf')
-    f_id = 'UNIQ_ID3'
-    dev_stressors = c("rlua", "popn", "pcntdev")
-}
-
-source("example_config.R")
-
+# complete set of stressors
 stressors = c(dev_stressors, ag_stressors)
 stressors_trans = c(dev_stressors_trans, ag_stressors_trans)
 
@@ -54,6 +26,8 @@ normalize = function(x, minx=NA, maxx=NA) {
     }
     return((x-minx) / (maxx-minx))
 }
+
+# functions for transformations on data
 identity = function (x) x
 logtrans = function (x) log10(x + if (min(x)==0) min(x[x!=0]) else 0)
 arcsin = function (x) asin(sqrt(normalize(x)))
@@ -73,12 +47,13 @@ if (use_road_correction) {
     roadlen = d[,f_rlua] * d[,f_area]
     roadarea = roadlen * roadwidth
     overag = d[,f_ag] / 100. * d[,f_area] > d[,f_area] - roadarea
-    d[,f_ag||'_raw'] = d[,f_ag]
+    d[,f_ag||'_raw'] = d[,f_ag]  # save previous value of percent ag.
     d[,f_ag][overag] = ((d[,f_area] - roadarea) / d[,f_area] * 100.)[overag]
 }
 
 # normalize all stressors
 for (stress in stressors) {
+    # apply requested transforms
     trans = environment()[[stressors_trans[match(stress, stressors)]]]
     d[stress||'_nrm'] = normalize(trans(d[stress]))
 }
@@ -93,16 +68,28 @@ d$ag_maxrel = apply(d[, ag_stressors||'_nrm', drop=F], 1, max)
 d$agdev = sqrt(d$ag_maxrel^2 + d$dev_maxrel^2)
 d$agdev = normalize(d$agdev)
 
-plots = c(stressors||'_nrm', c('ag_maxrel', 'dev_maxrel', 'agdev'))
-rows = as.integer(sqrt(length(plots))+0.5)
-cols = rows + if (rows^2 < length(plots)) 1 else 0
-png(filename=ag_stressors_trans[1]||'.png', width=800, height=800)
-par(mfrow=c(rows, cols), cex=1.)
-for (val in plots) {
-    hist(d[,val], main='', xlab=val)
+# just for reference, show impact of different transformations on
+# inputs
+for (trans_name in c('identity', 'logtrans', 'arcsin')) {
+    trans = environment()[[trans_name]]
+    plots = c(stressors, c('ag_maxrel', 'dev_maxrel', 'agdev'))
+    rows = as.integer(sqrt(length(plots))+0.5)
+    cols = rows + if (rows^2 < length(plots)) 1 else 0
+    png(filename=trans_name||'.png', width=800, height=800)
+    par(mfrow=c(rows, cols), cex=1.)
+    for (val in plots) {
+        x = d[,val]
+        if (val %in% stressors) {
+            x = trans(x)
+        }
+        hist(x, main='', xlab=val)
+    }
+    mtext(trans_name, outer=T, side=3, line=-2)
+    dev.off()
 }
-mtext(ag_stressors_trans[1], outer=T, side=3, line=-2)
-dev.off()
+
+out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.csv'
+write.csv(d, out_filename, row.names=F)
 
 # for verification,
 stress = order(d$dev_maxrel + d$ag_maxrel, decreasing=T)
