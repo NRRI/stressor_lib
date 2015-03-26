@@ -4,8 +4,6 @@
 # change to `d = read.dbf('some/path/wtshds_all.dbf')` etc. as appropriate
 d = read.csv('example_data.csv')
 
-f_id = 'wshed'  # name of unique ID field in data table
-
 # column names for development stressors
 dev_stressors = c("roadden", "pop", "pcntdev")
 

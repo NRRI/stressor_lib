@@ -71,17 +71,4 @@ d$agdev = normalize(d$agdev)
 out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.csv'
 write.csv(d, out_filename, row.names=F)
 
-# for verification
-if (F) {
-    stress = order(d$dev_maxrel + d$ag_maxrel, decreasing=T)
-    if (f_area %in% names(d)) {
-        d$area_nrm = normalize(d[,f_area])
-    } else {
-        d$area_nrm = -9999
-    }
-    stress = order(d[,f_id])
-    View(round(d[stress, c(f_id, 'area_nrm', paste(stressors, '_nrm', sep=''),
-        'dev_maxrel', 'ag_maxrel', 'agdev')], 3))
-}
-
       
