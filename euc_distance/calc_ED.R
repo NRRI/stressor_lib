@@ -44,11 +44,12 @@ for (stress in stressors) {
 
 if (use_road_correction) {
     # correction for roads in small ~100% ag. watersheds
-    roadlen = d[,f_rlua] * d[,f_area]
-    roadarea = roadlen * roadwidth
-    overag = d[,f_ag] / 100. * d[,f_area] > d[,f_area] - roadarea
+    roadlen = d[,f_rlua] * d[,f_area] / 1000  # in m, so * 1,000,000 / 1,000
+    roadarea = roadlen * roadwidth  # in m2
+    max_ag = d[,f_area] - roadarea
+    overag = d[,f_ag] / 100. * d[,f_area] > max_ag
     d[,f_ag||'_raw'] = d[,f_ag]  # save previous value of percent ag.
-    d[,f_ag][overag] = ((d[,f_area] - roadarea) / d[,f_area] * 100.)[overag]
+    d[,f_ag][overag] = (max_ag / d[,f_area] * 100.)[overag]
 }
 
 # normalize all stressors
