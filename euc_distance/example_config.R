@@ -17,6 +17,12 @@ ag_stressors = c("pcntag")
 # names of transformations to apply to ag_stressors
 ag_stressors_trans = c("identity")
 
+# make any fixes to the data as required
+for (stress in c(dev_stressors, ag_stressors)) {
+    d[stress][d[stress] == -9999] = NA
+    d[stress][is.na(d[stress])] = 0
+}
+
 # road correction, if F, remaining items can be ignored
 use_road_correction = F  # T / F to use / skip road correction
 # area field, in m2 - confirm this field is up to date
