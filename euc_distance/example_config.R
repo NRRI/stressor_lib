@@ -4,6 +4,10 @@
 # change to `d = read.dbf('some/path/wtshds_all.dbf')` etc. as appropriate
 d = read.csv('example_data.csv')
 
+# fields to keep in output, e.g. c('uniq_id', 'region')
+# or just c() for all fields
+extra_fields = c()
+
 # column names for development stressors
 dev_stressors = c("roadden", "pop", "pcntdev")
 
@@ -16,6 +20,10 @@ ag_stressors = c("pcntag")
 
 # names of transformations to apply to ag_stressors
 ag_stressors_trans = c("identity")
+
+# ignore these records when calculating min / max for zero - one rescale
+# set to NULL, *not* NA, to include all records
+d_ignore = NULL
 
 # make any fixes to the data as required
 for (stress in c(dev_stressors, ag_stressors)) {

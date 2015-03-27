@@ -21,15 +21,22 @@ if (is.null(extra_fields)) {
 "||.default" <- .Primitive("||")
 "||.character" <- function(...) paste(...,sep="")
 
-normalize = function(x, minx=NA, maxx=NA) {
+normalize = function(x, minx=NA, maxx=NA, ignore=NULL) {
     # scale vector x into a 0-1 range
+    show(length(ignore))
+    if (length(ignore) == 0) {
+        ignore = rep(FALSE, length(x))
+    }
     if (is.na(minx)) {
-        minx = min(x)
+        minx = min(x[!ignore])
     }
     if (is.na(maxx)) {
-        maxx = max(x)
+        maxx = max(x[!ignore])
     }
-    return((x-minx) / (maxx-minx))
+    ans = (x-minx) / (maxx-minx)
+    ans[ans < 0] = 0
+    ans[ans > 1] = 1
+    return(ans)
 }
 
 # functions for transformations on data
@@ -52,7 +59,7 @@ if (use_road_correction) {
 for (stress in stressors) {
     # apply requested transforms
     trans = environment()[[stressors_trans[match(stress, stressors)]]]
-    d[stress||'_nrm'] = normalize(trans(d[stress]))
+    d[,stress||'_nrm'] = normalize(trans(d[,stress]), ignore=d_ignore)
     out_fields = c(out_fields, stress||'_nrm')
 }
 
@@ -65,10 +72,12 @@ out_fields = c(out_fields, c('dev_maxrel', 'ag_maxrel'))
 
 # calc. Euc. dist.
 d$agdev = sqrt(d$ag_maxrel^2 + d$dev_maxrel^2)
-d$agdev = normalize(d$agdev)
+d$agdev = normalize(d$agdev, ignore=d_ignore)
 out_fields = c(out_fields, 'agdev')
 
 out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.csv'
 write.csv(d[, c(extra_fields, out_fields)], out_filename, row.names=F)
+out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.dbf'
+write.dbf(d[, c(extra_fields, out_fields)], out_filename)
 
       
