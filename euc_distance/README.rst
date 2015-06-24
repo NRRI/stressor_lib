@@ -54,6 +54,12 @@ Normalized (rescaled zero to one) values::
 #. ``s`` is rescaled zero to one, as before, to give the `Euclidean
    distance metric` for the data set.
 
+A variable set in the configuration file, ``d_ignore``, can be used to exclude some
+records from the calculation of ``min(all-x)`` and ``max(all-x)``.  This allows,
+for example, preventing extremely small watersheds determining the top quarter
+of a stressors range due to processing artifacts in rasterization when dealing
+with polygons only 10-20 grid cells in area.
+
 Road correction
 ---------------
 
