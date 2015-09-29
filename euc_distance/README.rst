@@ -60,6 +60,36 @@ for example, preventing extremely small watersheds determining the top quarter
 of a stressors range due to processing artifacts in rasterization when dealing
 with polygons only 10-20 grid cells in area.
 
+Files created
+-------------
+
+If invoked as::
+
+    R --no-save -f calc_ED.R --args myProject.R
+
+where ``myProject.R`` is the configuration files based on
+``example_config.R``, ``calc_ED.R`` will create the following
+files:
+
+myProject.ed.csv
+    Results in CSV
+myProject.ed.dbf
+    Results in DBF
+myProject.ed.minmax.R
+    Minimum and maximum values used for input variables, either
+    calculated from supplied data or from the ``minmax`` variable
+    in the config. file.  It is possible to calculate for multiple
+    data sets using the same min - max range, e.g.::
+
+        R --no-save -f calc_ED.R --args myProject_2000.R
+        R --no-save -f calc_ED.R --args myProject_2010.R
+
+    with the line::
+
+        source(myProject_2000.minmax.R)
+
+    in ``myProject_2010.R``.
+
 Road correction
 ---------------
 

@@ -31,6 +31,13 @@ for (stress in c(dev_stressors, ag_stressors)) {
     d[stress][is.na(d[stress])] = 0
 }
 
+# optional, specify min/max values from another dataset
+if (FALSE) {
+    minmax <-
+    list(min = list(pop10 = 104.5429153, pcntdev10 = 0, pcntag10 = 0),
+         max = list(pop10 = 5400.987793, pcntdev10 = 100, pcntag10 = 100))
+}
+
 # road correction, if F, remaining items can be ignored
 use_road_correction = F  # T / F to use / skip road correction
 # area field, in m2 - confirm this field is up to date

@@ -7,6 +7,10 @@ opts = commandArgs(trailingOnly=T)
 config_filename = opts[1]
 source(config_filename)
 
+if (! exists('minmax')) {
+    minmax = list(min=list(), max=list())
+}
+
 # complete set of stressors
 stressors = c(dev_stressors, ag_stressors)
 stressors_trans = c(dev_stressors_trans, ag_stressors_trans)
@@ -57,9 +61,21 @@ if (use_road_correction) {
 
 # normalize all stressors
 for (stress in stressors) {
-    # apply requested transforms
+    # get requested transform
     trans = environment()[[stressors_trans[match(stress, stressors)]]]
-    d[,stress||'_nrm'] = normalize(trans(d[,stress]), ignore=d_ignore)
+    # use or calculate minmax
+    if (! stress %in% names(minmax$min)) {
+        minmax$min[[stress]] = min(d[,stress])
+    }
+    if (! stress %in% names(minmax$max)) {
+        minmax$max[[stress]] = max(d[,stress])
+    }
+    d[,stress||'_nrm'] = normalize(
+        trans(d[,stress]),
+        minx=minmax$min[[stress]],
+        maxx=minmax$max[[stress]],
+        ignore=d_ignore
+    )
     out_fields = c(out_fields, stress||'_nrm')
 }
 
@@ -79,5 +95,7 @@ out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.csv'
 write.csv(d[, c(extra_fields, out_fields)], out_filename, row.names=F)
 out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.dbf'
 write.dbf(d[, c(extra_fields, out_fields)], out_filename)
+out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.minmax.R'
+dump("minmax", file=out_filename, control=NULL)
 
       
