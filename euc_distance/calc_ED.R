@@ -65,10 +65,10 @@ for (stress in stressors) {
     trans = environment()[[stressors_trans[match(stress, stressors)]]]
     # use or calculate minmax
     if (! stress %in% names(minmax$min)) {
-        minmax$min[[stress]] = min(d[,stress])
+        minmax$min[[stress]] = min(d[,stress][!d_ignore])
     }
     if (! stress %in% names(minmax$max)) {
-        minmax$max[[stress]] = max(d[,stress])
+        minmax$max[[stress]] = max(d[,stress][!d_ignore])
     }
     d[,stress||'_nrm'] = normalize(
         trans(d[,stress]),
@@ -97,5 +97,3 @@ out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.dbf'
 write.dbf(d[, c(extra_fields, out_fields)], out_filename)
 out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.minmax.R'
 dump("minmax", file=out_filename, control=NULL)
-
-      
