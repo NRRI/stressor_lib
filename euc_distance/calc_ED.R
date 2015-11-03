@@ -59,6 +59,12 @@ if (use_road_correction) {
     d[,f_ag][overag] = (max_ag / d[,f_area] * 100.)[overag]
 }
 
+# d_ignore this suitable for use as a subscript
+if (length(d_ignore) == 0) {
+    d_ignore = rep(FALSE, length(d))
+}
+
+
 # normalize all stressors
 for (stress in stressors) {
     # get requested transform
