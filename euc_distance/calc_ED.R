@@ -88,7 +88,21 @@ out_fields = c(out_fields, c('dev_maxrel', 'ag_maxrel'))
 
 # calc. Euc. dist.
 d$agdev = sqrt(d$ag_maxrel^2 + d$dev_maxrel^2)
-d$agdev = normalize(d$agdev, ignore=d_ignore)
+stress = 'agdev'
+# use or calculate minmax
+if (! stress %in% names(minmax$min)) {
+    minmax$min[[stress]] = min(d[,stress][!d_ignore])
+}
+if (! stress %in% names(minmax$max)) {
+    minmax$max[[stress]] = max(d[,stress][!d_ignore])
+}
+show(c(range(d$agdev[!d_ignore]), minmax$min$agdev, minmax$max$agdev))
+d$agdev = normalize(
+    d$agdev,
+    minx=minmax$min[[stress]],
+    maxx=minmax$max[[stress]],
+    ignore=d_ignore
+)
 out_fields = c(out_fields, 'agdev')
 
 out_filename = sub('\\.r$', '', config_filename, ignore.case=T) || '.ed.csv'
