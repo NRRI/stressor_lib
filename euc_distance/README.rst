@@ -51,8 +51,9 @@ Normalized (rescaled zero to one) values::
 
        s = sqrt(ag_mxr*ag_mxr + dev_mxr*dev_mxr)
 
-#. ``s`` is rescaled zero to one, as before, to give the `Euclidean
-   distance metric` for the data set.
+#. <del>``s`` is rescaled zero to one, as before, to give the `Euclidean
+   distance metric` for the data set.</del> This is no longer done, it
+   interferes with multi-timestep applications.
 
 A variable set in the configuration file, ``d_ignore``, can be used to exclude some
 records from the calculation of ``min(all-x)`` and ``max(all-x)``.  This allows,
