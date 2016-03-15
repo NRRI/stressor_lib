@@ -47,12 +47,11 @@ Normalized (rescaled zero to one) values::
    development category, ``dev_mxr`` is 0.618, 0.0, 1.000, and 0.489
    for the four watersheds, respectively.
    
-#. An intermediate value `s` is calculated as::
+#. The final value `agdev` is calculated as::
 
-       s = sqrt(ag_mxr*ag_mxr + dev_mxr*dev_mxr)
+       agdev = sqrt(ag_mxr*ag_mxr + dev_mxr*dev_mxr)
 
-#. <del>``s`` is rescaled zero to one, as before, to give the `Euclidean
-   distance metric` for the data set.</del> This is no longer done, it
+   Previously this value was rescaled 0-1, but this is no longer done, it
    interferes with multi-timestep applications.
 
 A variable set in the configuration file, ``d_ignore``, can be used to exclude some
